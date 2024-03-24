@@ -31,6 +31,12 @@ class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.setupUI()
+        NotificationCenter.default.addObserver(self, selector: #selector(handleItemsCleared), name: .itemsCleared, object: nil)
+
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
@@ -83,19 +89,29 @@ extension MainViewController: UITableViewDataSource, UITableViewDelegate {
     }
 }
 
-extension MainViewController: AddToCartDelegate {
+extension MainViewController: CartActionDelegate {
     func didAddToCart(item: ProductItem) {
-        
+        self.viewModel.addItemToCart(item: item)
+    }
+    
+    func didDeleteFromCart(item: ProductItem) {
+        self.viewModel.clearItems(items: [item])
     }
 }
 
 extension MainViewController {
     @objc func cartButtonDidTouchUpInside(sender: UIButton) {
-        let vc = CartViewController(itemsDict: self.viewModel.itemsDict)
+        let vc = CartViewController(items: self.viewModel.cartItems)
+        vc.delegate = self
         self.navigationController?.pushViewController(vc, animated: true)
     }
     @objc func rightBarButtonDidTouchUpInside(sender: UIButton) {
         let vc = HistoryViewController()
         self.navigationController?.pushViewController(vc, animated: true)
+    }
+    @objc func handleItemsCleared(notification: Notification) {
+        if let items = notification.object as? [ProductItem] {
+            self.viewModel.clearItems(items: items)
+        }
     }
 }

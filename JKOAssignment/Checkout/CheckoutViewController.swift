@@ -7,30 +7,34 @@
 
 import UIKit
 
-typealias ItemsDict = [ProductItem: Int]
-
 class CheckoutViewController: UIViewController {
-    private var itemsDict: ItemsDict
     private var items: [ProductItem] = []
     
     private lazy var tableView: UITableView = {
         let t = UITableView()
-        t.register(CheckoutTableViewCell.self, forCellReuseIdentifier: "CheckoutTableViewCell")
+        t.register(CartTableViewCell.self, forCellReuseIdentifier: "CartTableViewCell")
         t.separatorStyle = .none
+        t.backgroundColor = .systemGroupedBackground
         t.delegate = self
         t.dataSource = self
         return t
     }()
+    private lazy var totalPriceLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.backgroundColor = .white
+        return lbl
+    }()
     
     private lazy var confirmButton: UIButton = {
         let btn = UIButton()
-        btn.setTitle("確認訂單", for: .normal)
+        btn.backgroundColor = .red
+        btn.setTitle("提交訂單", for: .normal)
+        btn.addTarget(self, action: #selector(confirmButtonDidTouchUpInside), for: .touchUpInside)
         return btn
     }()
     
-    init(itemsDict: ItemsDict) {
-        self.itemsDict = itemsDict
-        self.items = Array(itemsDict.keys)
+    init(items: [ProductItem]) {
+        self.items = items
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) {
@@ -39,14 +43,17 @@ class CheckoutViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.setupUI()
+        self.calculateTotalPrice()
     }
 }
 
 private extension CheckoutViewController {
     func setupUI() {
+        self.view.backgroundColor = .white
         self.title = "確認訂單"
         
         self.view.addSubview(self.tableView)
+        self.view.addSubview(self.totalPriceLabel)
         self.view.addSubview(self.confirmButton)
         
         self.tableView.snp.makeConstraints { (make) in
@@ -54,11 +61,28 @@ private extension CheckoutViewController {
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(self.view.safeAreaLayoutGuide.snp.bottom).offset(-40)
         }
-        self.confirmButton.snp.makeConstraints { (make) in
+        self.totalPriceLabel.snp.makeConstraints { (make) in
             make.top.equalTo(self.tableView.snp.bottom)
-            make.leading.trailing.equalToSuperview()
+            make.leading.equalToSuperview().offset(16)
+            make.trailing.equalTo(self.confirmButton)
             make.bottom.equalTo(self.view.safeAreaLayoutGuide.snp.bottom)
         }
+        self.confirmButton.snp.makeConstraints { (make) in
+            make.top.equalTo(self.tableView.snp.bottom)
+            make.trailing.equalToSuperview()
+            make.bottom.equalTo(self.totalPriceLabel)
+            make.width.equalTo(100)
+        }
+    }
+    
+    func calculateTotalPrice() {
+        var totalPrice = 0.0
+        for item in self.items {
+            let count = Double(item.count ?? 0)
+            let subTotal = count * item.price
+            totalPrice += subTotal
+        }
+        self.totalPriceLabel.text = "總金額： \(totalPrice)"
     }
 }
 
@@ -67,17 +91,36 @@ extension CheckoutViewController: UITableViewDataSource, UITableViewDelegate {
         return 1
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.itemsDict.keys.count
+        return self.items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "CheckoutTableViewCell", for: indexPath) as? CheckoutTableViewCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "CartTableViewCell", for: indexPath) as? CartTableViewCell else {
             return UITableViewCell()
         }
+        cell.isSelectable = false
         let data = self.items[indexPath.row]
-        if let count = self.itemsDict[data] {
-            
-        }
+        let totalPrice = Double(data.count ?? 0) * data.price
+        cell.config(name: data.name, count: String(data.count ?? 0), totalPrice: String(totalPrice), isSelect: data.isSelect)
         return cell
+    }
+}
+
+extension CheckoutViewController {
+    @objc func confirmButtonDidTouchUpInside(sender: UIButton) {
+        var records: [TransactionRecord] = []
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let dateString = dateFormatter.string(from: Date())
+        for item in self.items {
+            let totalPrice = item.price * Double(item.count ?? 0)
+            let newRecord = TransactionRecord(name: item.name, date: dateString, count: String(item.count ?? 0), totalPrice: String(totalPrice))
+            records.append(newRecord)
+        }
+        TransactionHistory.shared.addRecords(records)
+        NotificationCenter.default.post(name: .itemsCleared, object: self.items)
+        self.showToast(message: "購買成功") {
+            self.navigationController?.popToRootViewController(animated: true)
+        }
     }
 }

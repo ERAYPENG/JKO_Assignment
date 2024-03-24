@@ -7,13 +7,14 @@
 
 import UIKit
 
-protocol AddToCartDelegate: AnyObject {
+protocol CartActionDelegate: AnyObject {
     func didAddToCart(item: ProductItem)
+    func didDeleteFromCart(item: ProductItem)
 }
 
 class DetailViewController: UIViewController {
     private var item: ProductItem
-    weak var delegate: AddToCartDelegate?
+    weak var delegate: CartActionDelegate?
     
     private lazy var nameLabel: UILabel = {
         let lbl = UILabel()
@@ -46,6 +47,12 @@ class DetailViewController: UIViewController {
         btn.addTarget(self, action: #selector(buyNowButtonTapped), for: .touchUpInside)
         return btn
     }()
+    private lazy var activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
+
     
     init(item: ProductItem) {
         self.item = item
@@ -72,6 +79,7 @@ private extension DetailViewController {
         self.view.addSubview(imageView)
         self.view.addSubview(addToCartButton)
         self.view.addSubview(buyNowButton)
+        self.imageView.addSubview(activityIndicator)
         
         self.nameLabel.snp.makeConstraints { (make) in
             make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top)
@@ -90,6 +98,7 @@ private extension DetailViewController {
         }
         self.imageView.snp.makeConstraints { (make) in
             make.top.equalTo(self.descriptionTextView.snp.bottom).offset(10)
+            make.height.greaterThanOrEqualTo(50)
             make.leading.trailing.equalToSuperview()
         }
         self.addToCartButton.snp.makeConstraints { (make) in
@@ -101,6 +110,9 @@ private extension DetailViewController {
             make.top.equalTo(self.addToCartButton.snp.bottom).offset(10)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(40)
+        }
+        self.activityIndicator.snp.makeConstraints { make in
+            make.center.equalToSuperview()
         }
     }
     func setupItem() {
@@ -116,7 +128,13 @@ private extension DetailViewController {
         }
     }
     func downloadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
+        DispatchQueue.main.async {
+            self.activityIndicator.startAnimating()
+        }
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                self.activityIndicator.stopAnimating()
+            }
             if let error = error {
                 print("Error downloading image: \(error)")
                 completion(nil)
@@ -137,11 +155,13 @@ private extension DetailViewController {
 extension DetailViewController {
     @objc func addToCartButtonTapped() {
         self.delegate?.didAddToCart(item: item)
-        self.navigationController?.popViewController(animated: true)
+        self.showToast(message: "成功") {
+            self.navigationController?.popViewController(animated: true)
+        }
     }
     @objc func buyNowButtonTapped() {
-        let itemsDict: ItemsDict = [self.item: 1]
-        let vc = CheckoutViewController(itemsDict: itemsDict)
+        self.item.count = 1
+        let vc = CheckoutViewController(items: [self.item])
         self.navigationController?.pushViewController(vc, animated: true)
     }
 }
