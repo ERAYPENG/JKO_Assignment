@@ -20,14 +20,11 @@ class MainViewController: UIViewController {
         t.dataSource = self
         return t
     }()
-    private lazy var countLabel: UILabel = {
-        let lbl = UILabel()
-        lbl.backgroundColor = .white
-        return lbl
-    }()
     private lazy var cartButton: UIButton = {
         let btn = UIButton()
         btn.backgroundColor = .red
+        btn.setImage(UIImage(named: "cart"), for: .normal)
+        btn.addTarget(self, action: #selector(cartButtonDidTouchUpInside), for: .touchUpInside)
         return btn
     }()
     
@@ -40,10 +37,14 @@ class MainViewController: UIViewController {
 // MARK: UI
 private extension MainViewController {
     func setupUI() {
-        self.title = "KKKK"
+        let button = UIButton()
+        button.setImage(UIImage(named: "history"), for: .normal)
+        button.addTarget(self, action: #selector(rightBarButtonDidTouchUpInside), for: .touchUpInside)
+        let rightButton = UIBarButtonItem(customView: button)
+        self.navigationItem.rightBarButtonItem = rightButton
+        self.title = "商品列表"
         self.view.backgroundColor = .white
         self.view.addSubview(self.tableView)
-        self.view.addSubview(self.countLabel)
         self.view.addSubview(self.cartButton)
         
         self.tableView.snp.makeConstraints({ (make) in
@@ -51,17 +52,10 @@ private extension MainViewController {
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(self.view.safeAreaLayoutGuide.snp.bottom).offset(-60)
         })
-        self.countLabel.snp.makeConstraints({ (make) in
-            make.leading.equalToSuperview()
+        self.cartButton.snp.makeConstraints({ (make) in
             make.top.equalTo(self.tableView.snp.bottom)
             make.bottom.equalTo(self.view.safeAreaLayoutGuide.snp.bottom)
-            make.trailing.equalTo(self.cartButton.snp.leading)
-        })
-        self.cartButton.snp.makeConstraints({ (make) in
-            make.top.equalTo(self.countLabel)
-            make.bottom.equalTo(self.countLabel)
-            make.trailing.equalToSuperview()
-            make.width.equalTo(60)
+            make.leading.trailing.equalToSuperview()
         })
     }
 }
@@ -74,7 +68,6 @@ extension MainViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.viewModel.items.count
     }
-    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "ProductItemTableViewCell", for: indexPath) as? ProductItemTableViewCell else {
             return UITableViewCell()
@@ -82,5 +75,27 @@ extension MainViewController: UITableViewDataSource, UITableViewDelegate {
         let data = self.viewModel.items[indexPath.row]
         cell.config(name:data.name, description:data.description, price:String(data.price))
         return cell
+    }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let vc = DetailViewController(item:self.viewModel.items[indexPath.row])
+        vc.delegate = self
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
+}
+
+extension MainViewController: AddToCartDelegate {
+    func didAddToCart(item: ProductItem) {
+        
+    }
+}
+
+extension MainViewController {
+    @objc func cartButtonDidTouchUpInside(sender: UIButton) {
+        let vc = CartViewController(itemsDict: self.viewModel.itemsDict)
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
+    @objc func rightBarButtonDidTouchUpInside(sender: UIButton) {
+        let vc = HistoryViewController()
+        self.navigationController?.pushViewController(vc, animated: true)
     }
 }
