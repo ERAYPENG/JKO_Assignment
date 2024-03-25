@@ -16,6 +16,8 @@ class MainViewController: UIViewController {
         t.backgroundColor = .systemGroupedBackground
         t.register(ProductItemTableViewCell.self, forCellReuseIdentifier: "ProductItemTableViewCell")
         t.separatorStyle = .none
+        t.estimatedRowHeight = 100
+        t.rowHeight = UITableView.automaticDimension
         t.delegate = self
         t.dataSource = self
         return t
@@ -64,6 +66,30 @@ private extension MainViewController {
             make.leading.trailing.equalToSuperview()
         })
     }
+    func fetchAfterAndUpdateData() {
+        self.viewModel.fetchMoreData(isAscending: true) { [weak self] itemsCount in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+                if self.viewModel.items.count >= self.viewModel.itemsPerPage * self.viewModel.maxPage {
+                    let newRow = max(self.viewModel.items.count - itemsCount - 1, 0)
+                    self.tableView.scrollToRow(at: IndexPath(row: newRow, section: 0), at: .bottom, animated: false)
+                }
+            }
+        }
+    }
+    func fetchPreviousAndUpdateData() {
+        self.viewModel.fetchMoreData(isAscending: false) { [weak self] itemsCount in
+            guard let self = self, itemsCount > 0 else { return }
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+                if self.viewModel.items.count >= self.viewModel.itemsPerPage * self.viewModel.maxPage {
+                    let newRow = max(itemsCount, 0)
+                    self.tableView.scrollToRow(at: IndexPath(row: newRow, section: 0), at: .top, animated: false)
+                }
+            }
+        }
+    }
 }
 
 // MARK: UITableViewDataSource, UITableViewDelegate
@@ -86,6 +112,22 @@ extension MainViewController: UITableViewDataSource, UITableViewDelegate {
         let vc = DetailViewController(item:self.viewModel.items[indexPath.row])
         vc.delegate = self
         self.navigationController?.pushViewController(vc, animated: true)
+    }
+}
+
+// MARK: UIScrollViewDelegate
+extension MainViewController: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let height = scrollView.frame.size.height
+
+        if offsetY > contentHeight - height {
+            self.fetchAfterAndUpdateData()
+        }
+        if offsetY < 0 {
+            self.fetchPreviousAndUpdateData()
+        }
     }
 }
 

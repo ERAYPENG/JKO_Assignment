@@ -14,14 +14,19 @@ struct ProductItem: Hashable {
     let imageUrlStr: String
     var count: Int?
     var isSelect: Bool = false
+    var serialNumber: Int
 }
 
 class MainViewControllerVM {
     var items: [ProductItem] = []
     var cartItems: [ProductItem] = []
     
+    let itemsPerPage: Int = 10
+    let maxPage: Int = 3
+    private(set) var isFetchingData: Bool = false
+    
     init() {
-        self.items = self.createMockData()
+        self.items = self.createMockData(startIndex: 0, isAscending: true)
     }
     
     func addItemToCart(item: ProductItem) {
@@ -40,14 +45,50 @@ class MainViewControllerVM {
             items.contains(where: { $0.name == cartItem.name })
         }
     }
+    func fetchMoreData(isAscending: Bool, completion: @escaping (Int) -> Void) {
+        guard !self.isFetchingData else { return }
+        self.isFetchingData = true
+        
+        DispatchQueue.global().async { [weak self] in
+            guard let self = self, let startItem = isAscending ? self.items.last : self.items.first else { return }
+            let newItems = self.createMockData(startIndex: startItem.serialNumber, isAscending: isAscending)
+            DispatchQueue.main.async {
+                isAscending ? self.items.append(contentsOf: newItems) : self.items.insert(contentsOf: newItems, at: 0)
+                let maxItems = self.itemsPerPage * self.maxPage
+                if self.items.count > maxItems {
+                    isAscending ? self.items.removeFirst(self.itemsPerPage) : self.items.removeLast(self.itemsPerPage)
+                }
+                self.isFetchingData = false
+                completion(newItems.count)
+            }
+        }
+    }
 }
 
 private extension MainViewControllerVM {
-    func createMockData() -> [ProductItem] {
-        return [
-            ProductItem(name: "iPhone 13", description: "全新的 A15 仿生晶片，速度更快", price: 799.0, imageUrlStr: "https://picsum.photos/200/300?grayscale"),
-            ProductItem(name: "MacBook Pro", description: "配備 M1 Pro 或 M1 Max 芯片，性能極致強大", price: 1999.0, imageUrlStr: "https://picsum.photos/200/300?grayscale"),
-            ProductItem(name: "AirPods Pro", description: "全新的輕鬆聽感，降噪效果更佳", price: 249.0, imageUrlStr: "https://picsum.photos/200/300?grayscale")
-        ]
+    func createMockData(startIndex: Int, isAscending: Bool) -> [ProductItem] {
+        if self.items.first?.serialNumber == 1 && !isAscending {
+            return []
+        }
+        let batchSize = 10
+        var items: [ProductItem] = []
+        
+        let range: [Int]
+        if isAscending {
+            range = Array(startIndex + 1 ..< (startIndex + 1 + batchSize))
+        } else {
+            range = Array((max(startIndex - batchSize, 1) ..< startIndex).reversed())
+        }
+        for i in range {
+            let name = "產品 #\(i)"
+            let description = "這是產品 #\(i) 的描述。"
+            let price = Double(round(10 * Double.random(in: 100...1000)) / 10)
+            let imageUrlStr = "https://picsum.photos/200/300?random=\(i)"
+
+            let item = ProductItem(name: name, description: description, price: price, imageUrlStr: imageUrlStr, serialNumber: i)
+            isAscending ? items.append(item) : items.insert(item, at: 0)
+        }
+
+        return items
     }
 }
