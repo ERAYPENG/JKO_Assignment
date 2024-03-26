@@ -8,21 +8,14 @@
 import UIKit
 
 class HistoryTableViewCell: UITableViewCell {
-    private lazy var nameLabel: UILabel = {
-        let lbl = UILabel()
-        lbl.numberOfLines = 0
-        return lbl
+    private lazy var stackView: UIStackView = {
+        let sView = UIStackView()
+        sView.axis = .vertical
+        return sView
     }()
     
-    private lazy var countLabel: UILabel = {
+    private lazy var totoalPriceLabel: UILabel = {
         let lbl = UILabel()
-        lbl.numberOfLines = 0
-        return lbl
-    }()
-    
-    private lazy var totalPriceLabel: UILabel = {
-        let lbl = UILabel()
-        lbl.textAlignment = .right
         lbl.numberOfLines = 0
         return lbl
     }()
@@ -53,48 +46,77 @@ class HistoryTableViewCell: UITableViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        self.nameLabel.text = nil
-        self.countLabel.text = nil
-        self.totalPriceLabel.text = nil
         self.dateLabel.text = nil
+        self.stackView.subviews.forEach({ $0.removeFromSuperview() })
     }
     
-    func config(record: TransactionRecord) {
-        self.nameLabel.text = record.name
-        self.countLabel.text = record.count
-        self.totalPriceLabel.text = record.totalPrice
-        self.dateLabel.text = record.date
+    func config(records: [TransactionRecord]) {
+        guard let dateStr = records.first?.date else { return }
+        self.dateLabel.text = dateStr
+        var total = 0.0
+        
+        
+        for record in records {
+            total += record.totalPrice
+            let subView = self.createStackViewSubView(record: record)
+            self.stackView.addArrangedSubview(subView)
+        }
+        
+        self.totoalPriceLabel.text = "總金額 : \(total)"
+    }
+    
+    func createStackViewSubView(record: TransactionRecord) -> UIView {
+        let view = UIView()
+        let nameLabel = UILabel()
+        let countLabel = UILabel()
+        let totalPriceLabel = UILabel()
+        totalPriceLabel.textAlignment = .right
+        
+        nameLabel.text = record.name
+        countLabel.text = String(record.count)
+        totalPriceLabel.text = String(record.totalPrice)
+        
+        view.addSubview(nameLabel)
+        view.addSubview(countLabel)
+        view.addSubview(totalPriceLabel)
+        
+        nameLabel.snp.makeConstraints { (make) in
+            make.leading.equalToSuperview()
+            make.top.bottom.equalToSuperview().inset(16)
+            make.width.equalTo(150)
+        }
+        countLabel.snp.makeConstraints { (make) in
+            make.leading.equalTo(nameLabel.snp.trailing).offset(16)
+            make.top.bottom.equalTo(nameLabel)
+            make.width.equalTo(30)
+        }
+        totalPriceLabel.snp.makeConstraints { (make) in
+            make.trailing.equalToSuperview()
+            make.top.bottom.equalTo(nameLabel)
+            make.width.equalTo(100)
+        }
+        
+        return view
     }
 }
 
 private extension HistoryTableViewCell {
     func setupUI() {
-        self.contentView.addSubview(self.nameLabel)
-        self.contentView.addSubview(self.countLabel)
-        self.contentView.addSubview(self.totalPriceLabel)
+        self.contentView.addSubview(self.stackView)
+        self.contentView.addSubview(self.totoalPriceLabel)
         self.contentView.addSubview(self.dateLabel)
         self.contentView.addSubview(self.seperateLine)
         
-        self.nameLabel.snp.makeConstraints { (make) in
-            make.leading.equalToSuperview().offset(16)
-            make.top.equalToSuperview().offset(10)
-            make.width.equalTo(150)
+        self.stackView.snp.makeConstraints { (make) in
+            make.leading.top.trailing.equalToSuperview().inset(16)
+        }
+        self.totoalPriceLabel.snp.makeConstraints { (make) in
+            make.top.equalTo(self.stackView.snp.bottom)
+            make.trailing.equalToSuperview().offset(-16)
             make.height.equalTo(30)
         }
-        self.countLabel.snp.makeConstraints { (make) in
-            make.trailing.equalTo(self.totalPriceLabel.snp.leading).offset(16)
-            make.centerY.equalTo(self.nameLabel)
-            make.width.equalTo(30)
-            make.height.equalTo(self.nameLabel)
-        }
-        self.totalPriceLabel.snp.makeConstraints { (make) in
-            make.trailing.equalToSuperview().offset(-16)
-            make.width.equalTo(100)
-            make.height.equalTo(self.nameLabel)
-            make.centerY.equalTo(self.nameLabel)
-        }
         self.dateLabel.snp.makeConstraints { (make) in
-            make.top.equalTo(self.nameLabel.snp.bottom)
+            make.top.equalTo(self.totoalPriceLabel.snp.bottom)
             make.trailing.equalToSuperview().offset(-16)
             make.bottom.equalToSuperview().offset(-10)
             make.height.equalTo(30)

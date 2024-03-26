@@ -116,7 +116,7 @@ extension CheckoutViewController {
         let dateString = dateFormatter.string(from: Date())
         for item in self.items {
             let totalPrice = item.price * Double(item.count ?? 0)
-            let newRecord = TransactionRecord(name: item.name, date: dateString, count: String(item.count ?? 0), totalPrice: String(totalPrice))
+            let newRecord = TransactionRecord(name: item.name, date: dateString, count: item.count ?? 0, totalPrice: totalPrice)
             records.append(newRecord)
         }
         TransactionHistory.shared.addRecords(records)

@@ -10,8 +10,8 @@ import Foundation
 struct TransactionRecord {
     var name: String
     var date: String
-    var count: String
-    var totalPrice: String
+    var count: Int
+    var totalPrice: Double
 }
 
 class TransactionHistory {
@@ -19,10 +19,10 @@ class TransactionHistory {
 
     private init() {}
 
-    var records: [TransactionRecord] = []
+    var records: [[TransactionRecord]] = []
 
     func addRecords(_ records: [TransactionRecord]) {
-        self.records.insert(contentsOf: records, at: 0)
+        self.records.insert(records, at: 0)
     }
 
     func deleteAllRecords() {

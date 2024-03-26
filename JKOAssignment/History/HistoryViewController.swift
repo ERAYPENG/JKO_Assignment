@@ -81,7 +81,7 @@ extension HistoryViewController: UITableViewDelegate, UITableViewDataSource {
             return UITableViewCell()
         }
         let data = TransactionHistory.shared.records[indexPath.row]
-        cell.config(record: data)
+        cell.config(records: data)
         return cell
     }
 }

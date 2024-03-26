@@ -27,6 +27,9 @@ class DetailViewController: UIViewController {
     }()
     private lazy var descriptionTextView: UITextView = {
         let t = UITextView()
+        t.isEditable = false
+        t.isSelectable = false
+        t.textContainer.lineFragmentPadding = 10
         return t
     }()
     private lazy var imageView: UIImageView = {
@@ -109,7 +112,7 @@ private extension DetailViewController {
         self.descriptionTextView.snp.makeConstraints { (make) in
             make.top.equalTo(self.priceLabel.snp.bottom).offset(10)
             make.leading.trailing.equalToSuperview()
-            make.height.greaterThanOrEqualTo(30)
+            make.height.greaterThanOrEqualTo(100)
         }
         self.imageView.snp.makeConstraints { (make) in
             make.top.equalTo(self.descriptionTextView.snp.bottom).offset(10)
@@ -143,7 +146,14 @@ private extension DetailViewController {
     func setupItem() {
         self.nameLabel.text = self.item.name
         self.priceLabel.text = String(self.item.price)
-        self.descriptionTextView.text = self.item.description
+        
+        let numberOfCopies = 5
+        var finalDescription = ""
+        for _ in 1 ... numberOfCopies {
+            finalDescription += self.item.description + "\n"
+        }
+        
+        self.descriptionTextView.text = finalDescription
         if let url = URL(string: self.item.imageUrlStr) {
             self.downloadImage(from: url) { image in
                 DispatchQueue.main.async {
