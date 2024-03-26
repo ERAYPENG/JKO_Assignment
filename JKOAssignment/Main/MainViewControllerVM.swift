@@ -18,8 +18,8 @@ struct ProductItem: Hashable {
 }
 
 class MainViewControllerVM {
-    var items: [ProductItem] = []
-    var cartItems: [ProductItem] = []
+    private(set) var items: [ProductItem] = []
+    private(set) var cartItems: [ProductItem] = []
     
     let itemsPerPage: Int = 10
     let maxPage: Int = 3

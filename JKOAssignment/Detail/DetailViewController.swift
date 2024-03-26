@@ -187,6 +187,7 @@ private extension DetailViewController {
     }
 }
 
+// MARK: Action
 extension DetailViewController {
     @objc func addToCartButtonTapped() {
         self.item.count = self.quantityCount

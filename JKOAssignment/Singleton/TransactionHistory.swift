@@ -19,7 +19,7 @@ class TransactionHistory {
 
     private init() {}
 
-    var records: [[TransactionRecord]] = []
+    private(set) var records: [[TransactionRecord]] = []
 
     func addRecords(_ records: [TransactionRecord]) {
         self.records.insert(records, at: 0)

@@ -123,6 +123,7 @@ extension CartViewController: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
+// MARK: Action
 private extension CartViewController {
     @objc func checkoutButtonDidTouchUpInside(sender: UIButton) {
         let selectItems = self.items.filter({ $0.isSelect })

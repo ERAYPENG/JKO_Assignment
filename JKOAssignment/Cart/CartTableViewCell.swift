@@ -71,9 +71,9 @@ class CartTableViewCell: UITableViewCell {
     }
 }
 
+// MARK: UI
 private extension CartTableViewCell {
     func setupUI() {
-        
         self.contentView.addSubview(self.selectButton)
         self.contentView.addSubview(self.nameLabel)
         self.contentView.addSubview(self.countLabel)
@@ -109,6 +109,7 @@ private extension CartTableViewCell {
     }
 }
 
+// MARK: Action
 extension CartTableViewCell {
     @objc func toggleSelect() {
         self.selectButton.isSelected = !self.selectButton.isSelected

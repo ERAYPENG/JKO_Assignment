@@ -131,6 +131,7 @@ extension MainViewController: UIScrollViewDelegate {
     }
 }
 
+// MARK: CartActionDelegate
 extension MainViewController: CartActionDelegate {
     func didAddToCart(item: ProductItem) {
         self.viewModel.addItemToCart(item: item)
@@ -141,6 +142,7 @@ extension MainViewController: CartActionDelegate {
     }
 }
 
+// MARK: Action
 extension MainViewController {
     @objc func cartButtonDidTouchUpInside(sender: UIButton) {
         let vc = CartViewController(items: self.viewModel.cartItems)

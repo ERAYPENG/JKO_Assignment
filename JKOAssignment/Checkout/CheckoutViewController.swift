@@ -108,6 +108,7 @@ extension CheckoutViewController: UITableViewDataSource, UITableViewDelegate {
     }
 }
 
+// MARK: Action
 extension CheckoutViewController {
     @objc func confirmButtonDidTouchUpInside(sender: UIButton) {
         var records: [TransactionRecord] = []
