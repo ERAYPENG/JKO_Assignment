@@ -9,6 +9,12 @@ import UIKit
 
 class HistoryViewController: UIViewController {
     
+    private lazy var alertLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.text = "無歷史紀錄"
+        lbl.backgroundColor = .clear
+        return lbl
+    }()
     private lazy var tableView: UITableView = {
         let t = UITableView()
         t.separatorStyle = .none
@@ -35,19 +41,28 @@ class HistoryViewController: UIViewController {
 // MARK: UI
 private extension HistoryViewController {
     func setupUI() {
+        self.view.backgroundColor = .systemGroupedBackground
+        
         let button = UIButton()
         button.setTitle("清除", for: .normal)
+        button.setTitleColor(.systemBlue, for: .normal)
         button.addTarget(self, action: #selector(rightBarButtonDidTouchUpInside), for: .touchUpInside)
         let rightButton = UIBarButtonItem(customView: button)
         self.navigationItem.rightBarButtonItem = rightButton
         
+        self.view.addSubview(self.alertLabel)
         self.view.addSubview(self.tableView)
         
+        self.alertLabel.snp.makeConstraints { (make) in
+            make.center.equalToSuperview()
+        }
         self.tableView.snp.makeConstraints { (make) in
             make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(self.view.safeAreaLayoutGuide.snp.bottom)
         }
+        
+        self.tableView.isHidden = TransactionHistory.shared.records.count == 0
     }
 }
 
@@ -74,6 +89,6 @@ extension HistoryViewController: UITableViewDelegate, UITableViewDataSource {
 private extension HistoryViewController {
     @objc func rightBarButtonDidTouchUpInside() {
         TransactionHistory.shared.deleteAllRecords()
-        self.tableView.reloadData()
+        self.tableView.isHidden = true
     }
 }

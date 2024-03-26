@@ -26,6 +26,12 @@ class CartViewController: UIViewController {
         btn.addTarget(self, action: #selector(checkoutButtonDidTouchUpInside), for: .touchUpInside)
         return btn
     }()
+    private lazy var alertLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.text = "您的購物車是空的"
+        lbl.backgroundColor = .clear
+        return lbl
+    }()
     
     init(items: [ProductItem]) {
         self.items = items
@@ -45,9 +51,15 @@ class CartViewController: UIViewController {
 // MARK: UI
 private extension CartViewController {
     func setupUI() {
+        self.view.backgroundColor = .systemGroupedBackground
+        
+        self.view.addSubview(self.alertLabel)
         self.view.addSubview(self.tableView)
         self.view.addSubview(self.checkoutButton)
         
+        self.alertLabel.snp.makeConstraints { (make) in
+            make.center.equalToSuperview()
+        }
         self.tableView.snp.makeConstraints({ (make) in
             make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top)
             make.leading.trailing.equalToSuperview()
@@ -58,6 +70,8 @@ private extension CartViewController {
             make.bottom.equalTo(self.view.safeAreaLayoutGuide.snp.bottom)
             make.leading.trailing.equalToSuperview()
         })
+        
+        self.tableView.isHidden = self.items.count == 0
     }
 }
 

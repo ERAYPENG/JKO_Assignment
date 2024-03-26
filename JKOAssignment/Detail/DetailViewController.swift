@@ -14,6 +14,7 @@ protocol CartActionDelegate: AnyObject {
 
 class DetailViewController: UIViewController {
     private var item: ProductItem
+    private var quantityCount: Int = 1
     weak var delegate: CartActionDelegate?
     
     private lazy var nameLabel: UILabel = {
@@ -32,6 +33,18 @@ class DetailViewController: UIViewController {
         let imgV = UIImageView()
         imgV.contentMode = .scaleAspectFit
         return imgV
+    }()
+    private lazy var quantityLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.text = "數量 : 1"
+        return lbl
+    }()
+    private lazy var quantityStepper: UIStepper = {
+        let stepper = UIStepper()
+        stepper.minimumValue = 1
+        stepper.maximumValue = 99
+        stepper.addTarget(self, action: #selector(stepperValueChanged), for: .valueChanged)
+        return stepper
     }()
     private lazy var addToCartButton: UIButton = {
         let btn = UIButton()
@@ -77,6 +90,8 @@ private extension DetailViewController {
         self.view.addSubview(priceLabel)
         self.view.addSubview(descriptionTextView)
         self.view.addSubview(imageView)
+        self.view.addSubview(quantityStepper)
+        self.view.addSubview(quantityLabel)
         self.view.addSubview(addToCartButton)
         self.view.addSubview(buyNowButton)
         self.imageView.addSubview(activityIndicator)
@@ -101,8 +116,18 @@ private extension DetailViewController {
             make.height.greaterThanOrEqualTo(50)
             make.leading.trailing.equalToSuperview()
         }
-        self.addToCartButton.snp.makeConstraints { (make) in
+        self.quantityStepper.snp.makeConstraints { (make) in
             make.top.equalTo(self.imageView.snp.bottom).offset(10)
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.height.equalTo(40)
+        }
+        self.quantityLabel.snp.makeConstraints { (make) in
+            make.top.equalTo(self.quantityStepper)
+            make.trailing.equalToSuperview().offset(-20)
+            make.height.equalTo(self.quantityStepper)
+        }
+        self.addToCartButton.snp.makeConstraints { (make) in
+            make.top.equalTo(self.quantityStepper.snp.bottom).offset(10)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(40)
         }
@@ -154,14 +179,20 @@ private extension DetailViewController {
 
 extension DetailViewController {
     @objc func addToCartButtonTapped() {
-        self.delegate?.didAddToCart(item: item)
+        self.item.count = self.quantityCount
+        self.delegate?.didAddToCart(item: self.item)
         self.showToast(message: "成功") {
             self.navigationController?.popViewController(animated: true)
         }
     }
     @objc func buyNowButtonTapped() {
-        self.item.count = 1
-        let vc = CheckoutViewController(items: [self.item])
+        self.item.count = self.quantityCount
+        let vc = CheckoutViewController(items: [self.item], isCheckoutDirectly: true)
         self.navigationController?.pushViewController(vc, animated: true)
+    }
+    @objc func stepperValueChanged(sender: UIStepper) {
+        let stepperValue = Int(sender.value)
+        self.quantityCount = stepperValue
+        self.quantityLabel.text = "數量 : \(stepperValue)"
     }
 }

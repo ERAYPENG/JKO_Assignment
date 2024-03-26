@@ -35,9 +35,7 @@ class MainViewControllerVM {
             existingItem.count = (existingItem.count ?? 0) + 1
             self.cartItems[index] = existingItem
         } else {
-            var newItem = item
-            newItem.count = 1
-            self.cartItems.insert(newItem, at: 0)
+            self.cartItems.insert(item, at: 0)
         }
     }
     func clearItems(items: [ProductItem]) {
@@ -82,8 +80,8 @@ private extension MainViewControllerVM {
         for i in range {
             let name = "產品 #\(i)"
             let description = "這是產品 #\(i) 的描述。"
-            let price = Double(round(10 * Double.random(in: 100...1000)) / 10)
-            let imageUrlStr = "https://picsum.photos/200/300?random=\(i)"
+            let price = Double(i * 1000)
+            let imageUrlStr = "https://picsum.photos/200/300"
 
             let item = ProductItem(name: name, description: description, price: price, imageUrlStr: imageUrlStr, serialNumber: i)
             isAscending ? items.append(item) : items.insert(item, at: 0)

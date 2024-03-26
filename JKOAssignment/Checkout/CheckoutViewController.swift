@@ -9,6 +9,7 @@ import UIKit
 
 class CheckoutViewController: UIViewController {
     private var items: [ProductItem] = []
+    private var isCheckoutDirectly: Bool
     
     private lazy var tableView: UITableView = {
         let t = UITableView()
@@ -33,8 +34,9 @@ class CheckoutViewController: UIViewController {
         return btn
     }()
     
-    init(items: [ProductItem]) {
+    init(items: [ProductItem], isCheckoutDirectly: Bool = false) {
         self.items = items
+        self.isCheckoutDirectly = isCheckoutDirectly
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) {
@@ -118,7 +120,9 @@ extension CheckoutViewController {
             records.append(newRecord)
         }
         TransactionHistory.shared.addRecords(records)
-        NotificationCenter.default.post(name: .itemsCleared, object: self.items)
+        if !self.isCheckoutDirectly {
+            NotificationCenter.default.post(name: .itemsCleared, object: self.items)
+        }
         self.showToast(message: "購買成功") {
             self.navigationController?.popToRootViewController(animated: true)
         }
